@@ -1,80 +1,91 @@
 package com.example.example.service;
 
 import com.example.example.domain.entity.Board;
+import com.example.example.dto.ExternalApiResponse;
+import com.example.example.dto.req.CreateBoardRequest;
+import com.example.example.dto.res.BoardResponse;
 import com.example.example.repository.BoardRepository;
-import com.example.example.service.dto.request.CreateBoardServiceRequest;
-import com.example.example.service.dto.response.BoardServiceResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final RestClient restClient;
+
+    private static final String EXTERNAL_API_URL = "https://jsonplaceholder.typicode.com/posts";
 
     /**
-     * 게시글 생성 - MASTER DB 사용 (쓰기 작업)
+     * 외부 API에서 게시글 데이터를 가져와 저장 - MASTER DB 사용
      */
     @Transactional
-    public BoardServiceResponse createBoard(CreateBoardServiceRequest request) {
-        Board board = request.toEntity();
-        Board savedBoard = boardRepository.save(board);
-        return BoardServiceResponse.from(savedBoard);
+    public List<BoardResponse> createBoards() {
+        log.info("외부 API에서 게시글 데이터를 가져오기 시작");
+
+        // 1. 외부 API 호출
+        List<ExternalApiResponse> externalData = fetchExternalApiData();
+        log.info("외부 API에서 {}개의 게시글 데이터를 가져왔습니다", externalData.size());
+
+        // 2. 도메인 엔티티로 변환
+        List<Board> boards = convertToBoards(externalData);
+
+        // 3. DB 저장
+        List<Board> savedBoards = boardRepository.saveAll(boards);
+        log.info("{}개의 게시글을 저장했습니다", savedBoards.size());
+
+        // 4. 응답 DTO로 변환하여 반환
+        return convertToResponses(savedBoards);
     }
 
     /**
-     * 게시글 전체 조회 - SLAVE DB 사용 (읽기 작업)
-     * readOnly = true로 설정하면 자동으로 Slave DB로 라우팅
+     * 외부 API에서 게시글 데이터 조회
      */
-    @Transactional(readOnly = true)
-    public List<BoardServiceResponse> getAllBoards() {
-        return boardRepository.findAll().stream()
-                .map(BoardServiceResponse::from)
-                .collect(Collectors.toList());
+    private List<ExternalApiResponse> fetchExternalApiData() {
+        return restClient.get()
+                .uri(EXTERNAL_API_URL)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
     }
 
     /**
-     * 게시글 단건 조회 - SLAVE DB 사용
+     * 외부 API 응답을 Board 엔티티로 변환
      */
-    @Transactional(readOnly = true)
-    public BoardServiceResponse getBoard(Long id) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Board not found: " + id));
-        return BoardServiceResponse.from(board);
+    private List<Board> convertToBoards(List<ExternalApiResponse> responses) {
+        return responses.stream()
+                .map(this::toBoard)
+                .toList();
     }
 
     /**
-     * 게시글 수정 - MASTER DB 사용 (쓰기 작업)
+     * ExternalApiResponse를 Board 엔티티로 변환
      */
-    @Transactional
-    public BoardServiceResponse updateBoard(Long id, CreateBoardServiceRequest request) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Board not found: " + id));
-
-        // 엔티티 업데이트 (Dirty Checking)
-        Board updatedBoard = Board.builder()
-                .id(board.getId())
-                .title(request.getTitle())
-                .content(request.getContent())
+    private Board toBoard(ExternalApiResponse response) {
+        return Board.builder()
+                .title(response.title())
+                .content(response.body())
                 .build();
-
-        Board savedBoard = boardRepository.save(updatedBoard);
-        return BoardServiceResponse.from(savedBoard);
     }
 
     /**
-     * 게시글 삭제 - MASTER DB 사용 (쓰기 작업)
+     * Board 엔티티 리스트를 BoardServiceResponse 리스트로 변환
      */
-    @Transactional
-    public void deleteBoard(Long id) {
-        if (!boardRepository.existsById(id)) {
-            throw new IllegalArgumentException("Board not found: " + id);
-        }
-        boardRepository.deleteById(id);
+    private List<BoardResponse> convertToResponses(List<Board> boards) {
+        return boards.stream()
+                .map(BoardResponse::from)
+                .toList();
     }
+
+
+
 }

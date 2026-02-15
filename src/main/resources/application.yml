@@ -36,6 +36,7 @@ spring:
         temp:
           use_jdbc_metadata_defaults: false
     defer-datasource-initialization: false
+    open-in-view: false
 
 logging:
   level:
@@ -43,4 +44,8 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.jdbc.core: DEBUG
     org.springframework.jdbc.datasource: DEBUG
+    # 트랜잭션 시작/커밋/롤백 로그
+    org.springframework.transaction.interceptor: TRACE
+    org.springframework.orm.jpa.JpaTransactionManager: DEBUG
+    org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
     com.example.example: DEBUG

@@ -1,4 +1,4 @@
-package com.example.example.controller.dto.req;
+package com.example.example.dto.req;
 
 import lombok.Getter;
 
