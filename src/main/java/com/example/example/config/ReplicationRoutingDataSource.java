@@ -2,6 +2,7 @@ package com.example.example.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,7 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ReplicationRoutingDataSource extends AbstractRoutingDataSource {
 
-    private final AtomicInteger counter = new AtomicInteger(0);
+    private static final String MASTER_KEY = "master";
+    private final AtomicInteger slaveIndex = new AtomicInteger(0);
     private final List<String> slaveDataSourceKeys;
 
     public ReplicationRoutingDataSource(List<String> slaveDataSourceKeys) {
@@ -18,17 +20,18 @@ public class ReplicationRoutingDataSource extends AbstractRoutingDataSource {
 
     @Override
     protected Object determineCurrentLookupKey() {
-        DataSourceType dataSourceType = DataSourceContextHolder.getDataSourceType();
+        // Spring의 TransactionSynchronizationManager를 활용하여 readOnly 속성 확인
+        boolean isReadOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
 
-        if (dataSourceType == DataSourceType.SLAVE) {
+        if (isReadOnly) {
             // Round-robin 방식으로 Slave 서버 로드밸런싱
-            int index = counter.getAndIncrement() % slaveDataSourceKeys.size();
+            int index = slaveIndex.getAndIncrement() % slaveDataSourceKeys.size();
             String selectedSlave = slaveDataSourceKeys.get(index);
             log.debug("Routing to SLAVE DataSource: {}", selectedSlave);
             return selectedSlave;
         }
 
         log.debug("Routing to MASTER DataSource");
-        return "master";
+        return MASTER_KEY;
     }
 }

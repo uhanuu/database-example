@@ -8,16 +8,22 @@ spring:
       username: root
       password: 1234
       driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        initialization-fail-timeout: -1
     slave1:
       jdbc-url: jdbc:mysql://localhost:3307/regram?allowPublicKeyRetrieval=true&useSSL=false
       username: root
       password: 1234
       driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        initialization-fail-timeout: -1
     slave2:
       jdbc-url: jdbc:mysql://localhost:3308/regram?allowPublicKeyRetrieval=true&useSSL=false
       username: root
       password: 1234
       driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        initialization-fail-timeout: -1
 
   jpa:
     hibernate:
@@ -27,4 +33,14 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+        temp:
+          use_jdbc_metadata_defaults: false
     defer-datasource-initialization: false
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.core: DEBUG
+    org.springframework.jdbc.datasource: DEBUG
+    com.example.example: DEBUG
