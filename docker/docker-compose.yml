@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mysql-primary:
+    image: mysql:8
+    container_name: mysql-primary
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./primary/primary.cnf:/etc/mysql/conf.d/primary.cnf
+      - mysql-primary-data:/var/lib/mysql
+    networks:
+      - mysql-replication
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-secondary1:
+    image: mysql:8
+    container_name: mysql-secondary1
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./secondary1/secondary1.cnf:/etc/mysql/conf.d/secondary1.cnf
+      - mysql-secondary1-data:/var/lib/mysql
+    networks:
+      - mysql-replication
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-secondary2:
+    image: mysql:8
+    container_name: mysql-secondary2
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./secondary2/secondary2.cnf:/etc/mysql/conf.d/secondary2.cnf
+      - mysql-secondary2-data:/var/lib/mysql
+    networks:
+      - mysql-replication
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  mysql-replication:
+    driver: bridge
+
+volumes:
+  mysql-primary-data:
+  mysql-secondary1-data:
+  mysql-secondary2-data:

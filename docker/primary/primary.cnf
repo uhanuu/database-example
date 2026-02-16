@@ -1,0 +1,51 @@
+[mysqld]
+
+# -------------------------
+# 기본 설정
+# -------------------------
+server-id = 1
+port = 3306
+bind-address = 0.0.0.0
+skip-name-resolve
+
+# -------------------------
+# Binary Log (8.4 기준)
+# -------------------------
+log_bin = mysql-bin
+binlog_format = ROW
+sync_binlog = 1
+binlog_expire_logs_seconds = 604800   # 7일
+
+# -------------------------
+# GTID (실무 필수)
+# -------------------------
+gtid_mode = ON
+enforce_gtid_consistency = ON
+log_replica_updates = ON   # 8.4에서 log_slave_updates 대체
+
+# -------------------------
+# InnoDB 안정성 (금융권 기준)
+# -------------------------
+innodb_flush_log_at_trx_commit = 1
+innodb_buffer_pool_size = 1G
+innodb_log_file_size = 256M
+innodb_file_per_table = 1
+
+# -------------------------
+# 연결 설정
+# -------------------------
+max_connections = 200
+wait_timeout = 600
+interactive_timeout = 600
+
+# -------------------------
+# 모니터링 & 튜닝
+# -------------------------
+performance_schema = ON
+slow_query_log = 1
+long_query_time = 2
+
+# -------------------------
+# Docker 표준 로그 설정
+# -------------------------
+# log_error = /proc/self/fd/2

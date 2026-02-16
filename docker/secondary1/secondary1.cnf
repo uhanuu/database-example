@@ -1,0 +1,61 @@
+[mysqld]
+
+# -------------------------
+# 기본 설정
+# -------------------------
+server-id = 2
+port = 3306
+bind-address = 0.0.0.0
+skip-name-resolve
+
+# -------------------------
+# 읽기 전용 (실무 필수)
+# -------------------------
+read_only = ON
+# super_read_only = ON  # 스크립트에서 replication 설정 후 활성화됨
+
+# -------------------------
+# Binary Log (Failover 대비 권장)
+# -------------------------
+log_bin = mysql-bin
+binlog_format = ROW
+sync_binlog = 1
+
+# -------------------------
+# Relay Log 안정성
+# -------------------------
+relay_log = relay-bin
+relay_log_recovery = ON
+sync_relay_log = 1
+sync_relay_log_info = 1
+
+# -------------------------
+# GTID
+# -------------------------
+gtid_mode = ON
+enforce_gtid_consistency = ON
+log_replica_updates = ON
+
+# -------------------------
+# InnoDB
+# -------------------------
+innodb_flush_log_at_trx_commit = 1
+innodb_buffer_pool_size = 1G
+innodb_log_file_size = 256M
+innodb_file_per_table = 1
+
+# -------------------------
+# 병렬 복제 (실무 권장)
+# -------------------------
+replica_parallel_workers = 4
+replica_parallel_type = LOGICAL_CLOCK
+
+# -------------------------
+# 모니터링
+# -------------------------
+performance_schema = ON
+
+# -------------------------
+# Docker 로그
+# -------------------------
+# log_error = /proc/self/fd/2
