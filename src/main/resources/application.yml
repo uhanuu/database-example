@@ -48,4 +48,12 @@ logging:
     org.springframework.transaction.interceptor: TRACE
     org.springframework.orm.jpa.JpaTransactionManager: DEBUG
     org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
+    # LazyConnectionDataSourceProxy 실제 커넥션 획득 시점 로그
+    org.springframework.jdbc.datasource.DataSourceUtils: DEBUG
+    org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy: DEBUG
+    com.zaxxer.hikari: TRACE
+    com.zaxxer.hikari.pool.HikariPool: TRACE
+    com.zaxxer.hikari.pool.PoolBase: TRACE
+    org.hibernate.engine.jdbc.connections: DEBUG
+    org.hibernate.resource.jdbc: DEBUG
     com.example.example: DEBUG
