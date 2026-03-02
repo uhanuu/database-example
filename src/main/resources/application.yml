@@ -3,21 +3,21 @@ spring:
     name: example
 
   datasource:
-    master:
+    source:
       jdbc-url: jdbc:mysql://localhost:3306/regram?allowPublicKeyRetrieval=true&useSSL=false
       username: root
       password: 1234
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         initialization-fail-timeout: -1
-    slave1:
+    replica1:
       jdbc-url: jdbc:mysql://localhost:3307/regram?allowPublicKeyRetrieval=true&useSSL=false
       username: root
       password: 1234
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         initialization-fail-timeout: -1
-    slave2:
+    replica2:
       jdbc-url: jdbc:mysql://localhost:3308/regram?allowPublicKeyRetrieval=true&useSSL=false
       username: root
       password: 1234

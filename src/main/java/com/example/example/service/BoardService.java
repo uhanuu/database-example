@@ -18,7 +18,7 @@ public class BoardService {
     private final BoardRepository boardRepository;
 
     /**
-     * 게시글 생성 - MASTER DB 사용 (쓰기 작업)
+     * 게시글 생성 - SOURCE DB 사용 (쓰기 작업)
      */
     @Transactional
     public BoardServiceResponse createBoard(CreateBoardServiceRequest request) {

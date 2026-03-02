@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
@@ -18,47 +17,52 @@ import java.util.Map;
 @Configuration
 public class DataSourceConfig {
 
-    @Bean(name = "masterDataSource")
-    @ConfigurationProperties(prefix = "spring.datasource.master")
-    public DataSource masterDataSource() {
+    @Bean(name = "sourceDataSource")
+    @ConfigurationProperties(prefix = "spring.datasource.source")
+    public DataSource sourceDataSource() {
         return DataSourceBuilder.create()
                 .type(HikariDataSource.class)
                 .build();
     }
 
-
-    @Bean(name = "slaveDataSource1")
-    @ConfigurationProperties(prefix = "spring.datasource.slave1")
-    public DataSource slave1DataSource() {
+    @Bean(name = "replicaDataSource1")
+    @ConfigurationProperties(prefix = "spring.datasource.replica1")
+    public DataSource replica1DataSource() {
         return DataSourceBuilder.create()
                 .type(HikariDataSource.class)
                 .build();
     }
 
-    @Bean(name = "slaveDataSource2")
-    @ConfigurationProperties(prefix = "spring.datasource.slave2")
-    public DataSource slave2DataSource() {
+    @Bean(name = "replicaDataSource2")
+    @ConfigurationProperties(prefix = "spring.datasource.replica2")
+    public DataSource replica2DataSource() {
         return DataSourceBuilder.create()
                 .type(HikariDataSource.class)
                 .build();
+    }
+
+    @Bean(name = "replicaDataSourceKeys")
+    public List<String> replicaDataSourceKeys() {
+        return List.of("replica1", "replica2");
     }
 
     @Bean(name = "routingDataSource")
     public DataSource routingDataSource(
-            @Qualifier("masterDataSource") DataSource masterDataSource,
-            @Qualifier("slaveDataSource1") DataSource slave1DataSource,
-            @Qualifier("slaveDataSource2")DataSource slave2DataSource
+            @Qualifier("sourceDataSource") DataSource sourceDataSource,
+            @Qualifier("replicaDataSource1") DataSource replica1DataSource,
+            @Qualifier("replicaDataSource2") DataSource replica2DataSource,
+            @Qualifier("replicaDataSourceKeys") List<String> replicaDataSourceKeys
     ) {
         ReplicationRoutingDataSource routingDataSource =
-                new ReplicationRoutingDataSource(List.of("slave1", "slave2"));
+                new ReplicationRoutingDataSource(replicaDataSourceKeys);
 
         Map<Object, Object> dataSourceMap = new HashMap<>();
-        dataSourceMap.put("master", masterDataSource);
-        dataSourceMap.put("slave1", slave1DataSource);
-        dataSourceMap.put("slave2", slave2DataSource);
+        dataSourceMap.put("source", sourceDataSource);
+        dataSourceMap.put("replica1", replica1DataSource);
+        dataSourceMap.put("replica2", replica2DataSource);
 
         routingDataSource.setTargetDataSources(dataSourceMap);
-        routingDataSource.setDefaultTargetDataSource(masterDataSource);
+        routingDataSource.setDefaultTargetDataSource(sourceDataSource);
 
         return routingDataSource;
     }
